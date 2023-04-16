@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UiConsole": {
+      "commandName": "Project",
+      "commandLineArgs": "resource_usage solution_path"
+    }
+  }
+}

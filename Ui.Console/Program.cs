@@ -13,8 +13,9 @@ namespace UiConsole
 
             if (handler.Command == ArgumentHandler.CommandResourceUsage)
             {
-                var resourceFinder = new ResourceUsageScanner();
-                resourceFinder.ScanSolutionDirectory(handler.CommandArgument);
+                new ResourceUsageScanner().ScanSolutionDirectory(
+                    handler.CommandArgument,
+                    handler.CommandArguments.Skip(1).ToArray());
             }
             else
                 Console.WriteLine("Did nothing");
@@ -33,6 +34,8 @@ namespace UiConsole
             public string Command => _args[0];
 
             public string CommandArgument => _args[1];
+
+            public string[] CommandArguments => _args.Skip(1).ToArray();
 
             public void ValidateArgs()
             {

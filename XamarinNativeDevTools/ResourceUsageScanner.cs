@@ -13,7 +13,7 @@ namespace XamarinNativeDevTools
 
         public ResourceUsageScanner() { }
 
-        public void ScanSolutionDirectory(string rootDir)
+        public void ScanSolutionDirectory(string rootDir, string[] additionalSubDirectories)
         {
             var includes = new string[] { AndroidEntryFile, IosEntryFile };
 
@@ -36,24 +36,25 @@ namespace XamarinNativeDevTools
             finally
             {
                 if (!string.IsNullOrEmpty(androidProjectDir))
-                    ;// ScanAndroidProject(androidProjectDir);
+                    ScanAndroidProject(androidProjectDir, additionalSubDirectories);
 
                 if (!string.IsNullOrEmpty(iosProjectDir))
-                    ScanIosProject(iosProjectDir);
+                    ScanIosProject(iosProjectDir, additionalSubDirectories);
             }
         }
 
-        private void ScanAndroidProject(string dir)
+        private void ScanAndroidProject(string dir, string[] additionalDirectories)
         {
-            var skipResources = new string[] { "colors", "dimens", "strings", "styles" };
+            var skipResources = new string[] { "/colors", "/dimens", "/strings", "/styles", "flag_" };
             var noUsages = new FileUsageService().ScanForZeroUsages(
                 ScanForAndroidResources(dir)
                     .Select(path => Path.GetFileNameWithoutExtension(path))
-                    .Where(name => !skipResources.Any(name.Equals))
+                    .Where(name => !skipResources.Any(name.Contains))
                     .ToHashSet()
                     .ToArray(),
-                ScanForAndroidDirectories(dir).ToArray(),
-                new string[] { ".xml", ".cs", ".axml" }
+                ScanForAndroidDirectories(dir).Concat(additionalDirectories).ToArray(),
+                new string[] { ".xml", ".cs", ".axml" },
+                new string[] { "Resource.designer.cs" }
             );
 
             if (noUsages.Any())
@@ -64,16 +65,19 @@ namespace XamarinNativeDevTools
             }
          }
 
-        private void ScanIosProject(string dir)
+        private void ScanIosProject(string dir, string[] additionalDirectories)
         {
+            var skipResources = new string[] { "flag_" };
             var noUsages = new FileUsageService().ScanForZeroUsages(
                 ScanForIosResources(dir)
                     .Select(path => Path.GetFileNameWithoutExtension(path))
                     .Select(path => path.Replace("@2x", "").Replace("@3x", ""))
+                    .Where(name => !skipResources.Any(name.Contains))
                     .ToHashSet()
                     .ToArray(),
-                ScanForIosDirectories(dir).ToArray(),
-                new string[] { ".xml", ".cs", ".xib" }
+                ScanForIosDirectories(dir).Concat(additionalDirectories).ToArray(),
+                new string[] { ".xml", ".cs", ".xib" },
+                Array.Empty<string>()
             );
 
             if (noUsages.Any())
